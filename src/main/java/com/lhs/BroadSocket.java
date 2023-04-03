@@ -2,10 +2,7 @@ package com.lhs;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpSession;
@@ -21,28 +18,30 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.lhs.controller.ChatController;
-import com.lhs.controller.RoomController;
+import com.lhs.dao.RoomDAO;
+import com.lhs.dao.UserDAO;
 import com.lhs.dto.Chat;
 import com.lhs.dto.Room;
 import com.lhs.dto.User;
-import com.lhs.sevlets.LoginHandler;
 
 @ServerEndpoint(value="/broadsocket", configurator=WebSocketConfigurator.class)
 public class BroadSocket {
 	// private static List<Session> sessionUsers = Collections.synchronizedList(new ArrayList<>());
-	private static ArrayList<Room> roomList = LoginHandler.getRoomList();
+	private static ArrayList<Room> roomList;
 	private static HashMap<Integer, Room> roomUsers;
 	private static Map<Session, HttpSession> sessionMap = new HashMap<Session, HttpSession>();
 	private static Map<Session, Integer> roomMap = new HashMap<Session, Integer>();
+	private static Map<String, Session> nicknameMap = new HashMap<String, Session>(); 
 	private ChatController chatController = new ChatController();
+	private UserDAO userDAO = new UserDAO();
 	
 	// browser에서 웹 소켓으로 접속하면 호출되는 함수
 	public BroadSocket() {
+		roomList = RoomStaticList.getroomList();
 		System.out.println("BroadSocket Checked");
 		if(roomUsers == null) {
 			roomUsers = new HashMap<>();
 			for(int i = 0; i < roomList.size(); i++) {	
-				System.out.println(roomList.get(i).getId());
 				roomUsers.put(roomList.get(i).getId(), roomList.get(i));
 			}
 		}
@@ -51,13 +50,18 @@ public class BroadSocket {
 	@OnOpen
 	public void handleOpen(Session userSession, EndpointConfig config) {
 		HttpSession session = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
+		// httpsession & websocket mapping
 		sessionMap.put(userSession, session);
+		// usernicname & websocket mapping;
+		User user = (User)session.getAttribute("user");
+		nicknameMap.put(user.getNickname(),userSession);
 		// sessionUsers.add(userSession);
 	}
 
 	// browser에서 웹 소켓을 통해 메시지가 오면 호출되는 함수
 	@OnMessage
 	public void handleMessage(String message, Session userSession) throws IOException {
+//		RoomStaticList.reloadRoomList();
 	/*
 		if(roomUsers.get(1) == null) {
 			Room room = new Room(1, "test", 10);
@@ -88,11 +92,13 @@ public class BroadSocket {
 			if("enter".equals(order)) {
 				HttpSession session = sessionMap.get(userSession);
 				ArrayList<Session> userList = roomUsers.get(roomId).getUserList();
+				System.out.println("현재 방:" + userList);
 				int limit = roomUsers.get(roomId).getEntryLimit();
 				int nowRoomUserCount = userList.size();
 				JSONObject newJson = new JSONObject();
 				newJson.put("user", ((User)session.getAttribute("user")).getNickname());
-				newJson.put("data", ((User)session.getAttribute("user")).getNickname()+ "님 께서 입장하십니다");
+				newJson.put("data", ((User)session.getAttribute("user")).getNickname()+ "님 께서 입장하셨습니다");
+				newJson.put("system", "system");
 				String msg = newJson.toJSONString();
 				if(nowRoomUserCount < limit) {
 					roomMap.put(userSession, roomId);
@@ -119,15 +125,46 @@ public class BroadSocket {
 						.setUser((User) session.getAttribute("user"))
 						.build();
 				if(chatController.messaging(chat)) {
+					String target = String.valueOf(json.get("target"));
 					JSONObject newJson = new JSONObject();
 					newJson.put("user", ((User)session.getAttribute("user")).getNickname());
-					newJson.put("data", content);
-					String msg = newJson.toJSONString();
-					for(int i = 0; i < nowUserCount; i++) {
-						if(roomUserList.get(i) == userSession) {
-							continue;
+					
+					if("target".equals(target)) {
+						String targetUser = String.valueOf(json.get("targetUser"));
+						System.out.println(targetUser);
+						if(!targetUser.equals("")) {
+							newJson.put("data", content);
+							User user = userDAO.selectGetId(targetUser);
+							Session targetSession = nicknameMap.get(user.getNickname());
+							System.out.println(userSession);
+							System.out.println(targetSession);
+							newJson.put("dm", "dm");
+							boolean isTrue = true;
+							for(int i = 0; i < nowUserCount; i++) {
+								if(roomUserList.get(i) == targetSession) {
+									String msg = newJson.toJSONString();
+									roomUserList.get(i).getBasicRemote().sendText(msg);
+									isTrue = false;
+									break;
+								}
+							}
+						}else {
+							newJson.put("data", "잘못된 귓속말 사용법입니다 좌측상단을 통해 확인해주세요");
+							newJson.put("system", "system");
+							String msg = newJson.toJSONString();
+							userSession.getBasicRemote().sendText(msg);
 						}
-						roomUserList.get(i).getBasicRemote().sendText(msg);
+						// messaging
+						// roomUserList.get(0).getBasicRemote().sendText(msg);
+					}else {
+						newJson.put("data", content);
+						String msg = newJson.toJSONString();
+						for(int i = 0; i < nowUserCount; i++) {
+							if( roomUserList.get(i) == userSession ) {
+								continue;
+							}
+							roomUserList.get(i).getBasicRemote().sendText(msg);
+						}
 					}
 				}
 				
@@ -160,8 +197,13 @@ public class BroadSocket {
 			HttpSession session = sessionMap.get(userSession);
 			int roomId = roomMap.get(userSession);
 			roomUsers.get(roomId).getUserList().remove(userSession);
+			JSONObject newJson = new JSONObject();
+			newJson.put("user", ((User)session.getAttribute("user")).getNickname());
+			newJson.put("system", "system");
+			newJson.put("data", ((User)session.getAttribute("user")).getNickname()+"님 께서 퇴장하셨습니다");
+			String msg = newJson.toJSONString();
 			for(Session user: roomUsers.get(roomId).getUserList()) {					
-				user.getBasicRemote().sendText(((User)session.getAttribute("user")).getNickname()+"님 께서 퇴장하셨습니다");
+				user.getBasicRemote().sendText(msg);
 			}
 
 			roomMap.remove(userSession);

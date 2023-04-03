@@ -18,7 +18,7 @@ public class SignUpHandler extends HttpServlet {
 		userController = new UserController();
 	}
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		request.getRequestDispatcher("/singup.jsp").forward(request, response);
+		request.getRequestDispatcher("/signup.jsp").forward(request, response);
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -35,10 +35,14 @@ public class SignUpHandler extends HttpServlet {
 				.setUserId(id)
 				.build();
 		
-		if(userController.requestBySignUp(user)) {			
+		if(userController.requestBySignUp(user)) {
+			if(request.getAttribute("error") != null) {
+				request.removeAttribute("error");
+			}
 			response.sendRedirect("login");
 		} else {
-			request.getRequestDispatcher("/signup.jsp").include(request, response);
+			request.setAttribute("error", "signUpError");
+			request.getRequestDispatcher("/signup.jsp").forward(request, response);
 		}
 	}
 

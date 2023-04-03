@@ -11,13 +11,20 @@ public class Room {
 	private String title;
 	private int entryLimit;
 	private int onwerId;
+	private String password;
 	ArrayList<Session> userList = new ArrayList<Session>();
-	
-	public Room(int id, String title, int entryLimit, int onwerId) {
+	public Room(String title, int entryLimit, int ownerId, String password) {
+		this.title = title;
+		this.entryLimit = entryLimit;
+		this.onwerId = ownerId;
+		this.password = password;
+	}
+	public Room(int id, String title, int entryLimit, int onwerId, String password) {
 		this.id = id;
 		this.title = title;
 		this.entryLimit = entryLimit;
 		this.onwerId = onwerId;
+		this.password = password;
 	}
 	public int getId() {
 		return id;
@@ -49,4 +56,11 @@ public class Room {
 	public void setOwnerId(int ownerId) {
 		this.onwerId = ownerId;
 	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
 }

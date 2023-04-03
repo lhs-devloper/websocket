@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.lhs.BroadSocket;
+import com.lhs.RoomStaticList;
 import com.lhs.controller.RoomController;
 import com.lhs.controller.UserController;
 import com.lhs.dto.Room;
@@ -19,16 +20,11 @@ import com.lhs.dto.User;
 public class LoginHandler extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private UserController userController;
-	private RoomController roomController;
-	private static ArrayList<Room> roomList;
 	@Override
 	public void init() throws ServletException {
 		userController = new UserController();
-		roomController = new RoomController();
-		roomList = roomController.requestByAllRoomList();
 		new BroadSocket();
 		new roomHandler();
-		System.out.println(roomList);
 	}
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -49,15 +45,11 @@ public class LoginHandler extends HttpServlet {
 		if(userController.requestBySignIn(id, pw)) {
 			User user = userController.requestUserInfo(id);
 			request.getSession().setAttribute("user", user);
-			request.getSession().setAttribute("rooms", roomList);
+			request.getSession().setAttribute("rooms", RoomStaticList.getroomList());
 			response.sendRedirect("index.jsp");
 		} else {
-			request.setAttribute("error", "error");
+			request.setAttribute("error", "loginError");
 			request.getRequestDispatcher("/login.jsp").include(request, response);
 		}
-	}
-	
-	public static ArrayList<Room> getRoomList() {
-		return roomList;
 	}
 }

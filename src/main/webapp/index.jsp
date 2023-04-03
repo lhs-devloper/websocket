@@ -1,3 +1,4 @@
+<%@page import="com.lhs.RoomStaticList"%>
 <%@page import="com.lhs.sevlets.LoginHandler"%>
 <%@page import="com.lhs.BroadSocket"%>
 <%@page import="com.lhs.dto.Room"%>
@@ -11,28 +12,48 @@
 		response.sendRedirect("login");
 	} 
 	String userNickName = null;
-	ArrayList<Room> roomList = LoginHandler.getRoomList();
+	ArrayList<Room> roomList = RoomStaticList.getroomList();
 	User user = (User) session.getAttribute("user");
 	if(user == null){	
 	} else{
-		userNickName = user.getNickname();		
+		userNickName = user.getNickname();	
 	}
-
 %>
 
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-<link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> 
+<%@ include file="./setting.jsp" %> 
 <style>
 	a{
 		text-decoration: none;
 	}
+	.table-styled{
+		display:flex;
+		
+	}
+	.table{
+		display: flex;
+		overflow-y:scroll;
+		justify-content: center;
+		width: 100%;
+		height: auto;
+		height: 80vh;
+		table-layout : fixed;
+		text-align: center;
+	}
+	.table tr, .table td, table th{
+		padding-left: 50px;
+		padding-right: 50px;
+	}
 </style>
 </head>
 <body>
-	<h1>Welcome: <%= userNickName %></h1>
+	<h3 style="text-align: right;">환영합니다: <%= userNickName %>님</h3>
+	<div class="alert alert-success" role="alert">
+  		<a href="roomCreate.jsp">방 만들러 가기 &rarr; link</a>
+	</div>
 	<script>
 		function linktoclick(id, index){
 			location.href = "room?id="+id+"&index="+index;
@@ -48,7 +69,8 @@
 	        form.submit();
 		}
 		</script>
-	<table>
+	<div class="table-styled">
+	<table class="table table-striped table-hover">
 		<tr>
 			<th>방ID</th>
 			<th>방 제목</th>
@@ -59,19 +81,16 @@
 		<% if(roomList != null) { %>
 		<%  for(int i = 0; i < roomList.size(); i++){ %>
 		<tr>
-			<th><%= roomList.get(i).getId()%></th>
-			<th><%= roomList.get(i).getTitle() %></th>
-			<th><%= roomList.get(i).getUserList().size() %> / <%= roomList.get(i).getEntryLimit() %></th>
-			<th><button onclick="linktoclick(<%=roomList.get(i).getId()%>,<%=i%>)">입장</button></th>
-			<th><button onclick="deletetoclick(<%=roomList.get(i).getId()%>, <%=i%>)">삭제</button></th>
+			<td><%= roomList.get(i).getId()%></td>
+			<td><%= roomList.get(i).getTitle() %></td>
+			<td><%= roomList.get(i).getUserList().size() %> / <%= roomList.get(i).getEntryLimit() %></td>
+			<td><button onclick="linktoclick(<%=roomList.get(i).getId()%>,<%=i%>)" class="btn btn-success">입장</button></td>
+			<td><button onclick="deletetoclick(<%=roomList.get(i).getId()%>, <%=i%>)" class="btn btn-success">삭제</button></td>
 		</tr>
 		<% } %>
 		<% } %>
 	</table>
-	
-	<div>
-		<h3>방 만들러가기</h3>
-		<a href="roomCreate.jsp">방 만들기</a>
 	</div>
+<%@ include file="./footer.jsp" %>
 </body>
 </html>

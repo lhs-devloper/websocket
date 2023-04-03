@@ -1,36 +1,109 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@page import="com.lhs.dao.RoomDAO"%>
+<%@page import="com.lhs.dto.Room"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
 <title>Web Socket Example</title>
-<link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> 
+<%@ include file="./setting.jsp" %>
 </head>
+<style>
+.chat{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 90vh;
+}
+form{
+	margin-top: 5vh;
+	height: 10vh
+}
+.btn-group{
+	position: absolute;
+	left: 0;
+}
+fieldset{
+	background: #E6E6E6;
+	width: 50vw;
+	height: 80vh;
+	overflow-y:scroll;
+}
+fieldset::-webkit-scrollbar {
+  display: none;
+}
+#chat-list {
+    padding: 5px;
+}
+.other{
+	text-align:right;
+}
+.system{
+	text-align:center;
+	color: red;
+}
+.dm{
+	text-align:right;
+	color: #642EFE; 
+}
+</style>
 <body>
-
 <% 
-	out.print(session.getAttribute("user"));
 	String id = request.getParameter("id");
-	int roomId = Integer.valueOf(id);
+	int roomId = Integer.parseInt(id);
+	Room room = new RoomDAO().select(roomId);
+	if(room.getPassword() != null){
+		if(application.getAttribute("cetify") == null){
+			out.print("<script>alert('접근권한 없음'); location.href='./index.jsp'</script>");			
+		} else{
+			if((int)application.getAttribute("cetify") != roomId){
+				out.print("<script>alert('접근권한 없음'); location.href='./index.jsp'</script>");
+			}
+		}
+	}
 %>
   <!-- 채팅 영역 -->
+  <div class="btn-group">
+  <button class="btn btn-success dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+    귓속말 보내는 법
+  </button>
+  <div class="dropdown-menu">
+    <p>귓속말 옵션 설정</p>
+    <p>[닉네임]작성 후 보내기</p>
+  </div>
+  </div>
+  
+  <div class="chat">
+  <fieldset id="chat-filedset">
+  	<div id="chat-list"></div>
+  </fieldset>
   <form>
     <!-- 텍스트 박스에 채팅의 내용을 작성한다. -->
+    <select id="msgOpt">
+    	<option value="all">전체</option>
+    	<option value="target">귓속말</option>
+    </select>
     <input id="textMessage" type="text" onkeydown="return enter()">
     <!-- 서버로 메시지를 전송하는 버튼 -->
-    <input onclick="sendMessage()" value="Send" type="button">
+    <input onclick="sendMessage()" value="Send" type="button" class="btn btn-success">
   </form>
+  </div>
   <br />
+  
   <!-- 서버와 메시지를 주고 받는 콘솔 텍스트 영역 -->
-  <textarea id="messageTextArea" rows="10" cols="50" disabled="disabled"></textarea>
-  <script type="text/javascript">
+  <script type="text/javascript" charset="UTF-8">
     // 서버의 broadsocket의 서블릿으로 웹 소켓을 한다.
-    let webSocket = new WebSocket("ws://192.168.0.128:8080/chat/broadsocket");
+    // opopen();
+    const webSocket = new WebSocket("ws://192.168.0.128:8080/chat/broadsocket");
     // 콘솔 텍스트 영역
     let messageTextArea = document.getElementById("messageTextArea");
+    let chatfiled = document.querySelector('#chat-filedset')
     // 접속이 완료되면
     webSocket.onopen = function(message) {
       // 콘솔에 메시지를 남긴다.
-      messageTextArea.value += "Server connect...\n";
+      // messageTextArea.value += "Server connect...\n";
+      console.log("isTrue?");
       let enterMessageJson = {
     		  "roomId": <%=roomId%>,
     		  "order": "enter"
@@ -46,31 +119,83 @@
     };
     // 서버로부터 메시지가 도착하면 콘솔 화면에 메시지를 남긴다.
     webSocket.onmessage = function(message) {
-    	console.log(typeof message.data)
+    	// chat ++
     	let parsemessage = JSON.parse(message.data);
     	userNickname = parsemessage.user
-    //  messageTextArea.value += "(operator) => " + parsemessage.data + "\n";
-      messageTextArea.value += "(" + parsemessage.user +")" + " => " + parsemessage.data + "\n";
-      messageTextArea.scrollTop = messageTextArea.scrollHeight;
+    	console.log(parsemessage)
+    	const div = document.createElement('div');
+    	if(parsemessage.system){
+    		div.classList.add('system');
+    		const chat = document.createElement('div');
+            div.textContent = parsemessage.data;
+            div.appendChild(chat);
+            document.querySelector('#chat-list').appendChild(div);
+            chatfiled.scrollTop = chatfiled.scrollHeight;
+    	} else if(parsemessage.dm){
+    		div.classList.add('dm');
+	        const chat = document.createElement('div');
+	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
+	        div.appendChild(chat);
+	        document.querySelector('#chat-list').appendChild(div);
+	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    	}else{		
+	        div.classList.add('other');
+	        const chat = document.createElement('div');
+	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
+	        div.appendChild(chat);
+	        document.querySelector('#chat-list').appendChild(div);
+	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    	}
+        
+    	
+    	
+    	/*
+    	if(parsemessage.dm){
+    		messageTextArea.value += "test";
+    	}
+    	*/
+    	// messageTextArea.value += "(" + parsemessage.user +")" + " => " + parsemessage.data + "\n";
+    	// messageTextArea.scrollTop = messageTextArea.scrollHeight;
     };
     // 서버로 메시지를 발송하는 함수
     // Send 버튼을 누르거나 텍스트 박스에서 엔터를 치면 실행
     function sendMessage() {
       // 텍스트 박스의 객체를 가져옴
       let message = document.getElementById("textMessage");
+      console.log(message);
+      let msgOption = document.getElementById("msgOpt");
+      let targetUser = 'all';
       // 콘솔에 메세지를 남긴다.
-      messageTextArea.value += "(me) => " + message.value + "\n";
+	  if(msgOption.value === "target"){
+		  let target1 = message.value.indexOf('[');
+		  let target2 = message.value.indexOf(']');
+		  if(target1 != undefined && target2 != undefined){		  
+			  targetUser = message.value.substr(target1+1, target2-1);
+			  message.value = message.value.substring(target2+1);
+		  }
+	  }
+      const div = document.createElement('div');
+      div.classList.add('mine');
+      const chat = document.createElement('div');
+      div.textContent = "(me) => " + message.value + "\n";
+      div.appendChild(chat);
+      document.querySelector('#chat-list').appendChild(div);
+
       // 소켓으로 보낸다.
       let messageJson = {
     		  "roomId": <%=roomId%>,
     		  "order": "message",
-    		  "content": message.value
+    		  "content": message.value,
+    		  "target": msgOption.value,
+    		  "targetUser": targetUser
       }
       console.log(messageJson);
       webSocket.send(JSON.stringify(messageJson));
-      // 텍스트 박스 추기화
       message.value = "";
-      messageTextArea.scrollTop = messageTextArea.scrollHeight;
+      // 텍스트 박스 추기화
+      // message.value = "";
+      // messageTextArea.scrollTop = messageTextArea.scrollHeight;
+      chatfiled.scrollTop = chatfiled.scrollHeight;
     }
     // 텍스트 박스에서 엔터를 누르면
     function enter() {
@@ -84,5 +209,6 @@
       return true;
     }
   </script>
+ <%@ include file="./footer.jsp" %>
 </body>
 </html>

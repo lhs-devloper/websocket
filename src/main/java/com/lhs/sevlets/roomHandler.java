@@ -11,9 +11,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import com.lhs.BroadSocket;
+import com.lhs.RoomStaticList;
 import com.lhs.controller.RoomController;
 import com.lhs.dto.Room;
 import com.lhs.dto.User;
@@ -24,13 +24,11 @@ import com.lhs.dto.User;
 @WebServlet("/room")
 public class roomHandler extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private static ArrayList<Room> roomList;
 	private RoomController roomController;
     
     @Override
     public void init() throws ServletException {
     	roomController = new RoomController();
-    	roomList = LoginHandler.getRoomList();
     }
 
 	/**
@@ -40,13 +38,12 @@ public class roomHandler extends HttpServlet {
 		// TODO Auto-generated method stub
 		BroadSocket.BroadReload();
 		PrintWriter out = response.getWriter();
-		request.setCharacterEncoding("UTF-8");
-		response.setContentType("text/html; charset='utf-8'");
-		response.setCharacterEncoding("UTF-8");
+//		request.setCharacterEncoding("UTF-8");
+//		response.setContentType("text/html;charset=UTF-8");
+		
 		if(request.getSession().getAttribute("user") == null){
 			response.sendRedirect("login");
 		}
-		roomList = LoginHandler.getRoomList();
 		String id = request.getParameter("id");
 //		int parseId = Integer.parseInt(id);
 //		if(parseId <= 30) {
@@ -57,20 +54,32 @@ public class roomHandler extends HttpServlet {
 			int index = Integer.valueOf(request.getParameter("index"));
 			HashMap<Integer, Room> roomUsers = BroadSocket.getData();
 			if(roomUsers != null) {
+				System.out.println(id);
 				Room roomInfo = roomUsers.get(Integer.valueOf(id));
-				System.out.println(roomList);
-				System.out.println("나를 제외한 현재 인원:" +roomInfo.getUserList().size());
-				System.out.println("방 제한:" +roomList.get(index).getEntryLimit());
-				int now = roomInfo.getUserList().size();
-				int limit = roomList.get(index).getEntryLimit();
+				System.out.println(RoomStaticList.getroomList());
+				System.out.println("나를 제외한 현재 인원:" +RoomStaticList.getroomList().get(index).getUserList().size());
+				System.out.println("방 제한:" +RoomStaticList.getroomList().get(index).getEntryLimit());
+				System.out.println("방 개수: "+RoomStaticList.getroomList().size());
+				int now = RoomStaticList.getroomList().get(index).getUserList().size();
+				int limit = RoomStaticList.getroomList().get(index).getEntryLimit();
 				if(limit <= now) {
 					System.out.println("??");
 					out.print("<script>alert('입장인원 제한 초과'); location.href='"+"index.jsp"+"';</script>");
 				}
+				
 			}
+			if(RoomStaticList.getroomList().get(index).getPassword() != null) {
+				response.sendRedirect("password.jsp?id="+id);
+			}else {
+				response.setContentType("text/html; charset=UTF-8");
+				response.setCharacterEncoding("UTF-8");
+				request.setCharacterEncoding("UTF-8");
+				
+				response.sendRedirect("room.jsp?id="+id);
+			}
+//			RequestDispatcher dispather = request.getRequestDispatcher("/room.jsp");
 			
-			request.setAttribute("roomId", id);
-			request.getRequestDispatcher("/room.jsp").include(request, response);
+//			dispather.forward(request, response);
 		} else {
 			response.sendRedirect("index.jsp");
 		}
@@ -86,13 +95,22 @@ public class roomHandler extends HttpServlet {
 		if(limit < 2) {
 			response.sendRedirect("400.jsp");
 		}
+		Room room = null;
 		String title = request.getParameter("title");
 		User owner = (User)request.getSession().getAttribute("user");
+		System.out.println("owner: " + owner.getId());
+		System.out.println("Nickname: " +owner.getNickname());
+		String check = request.getParameter("check");
+		if(check != null) {			
+			String pw = request.getParameter("pw");
+			room = new Room(title, limit, owner.getId(), pw);
+		} else {
+			room = new Room(title, limit, owner.getId(), null);
+		}
 		int roomLastId = roomController.requestByAutoIncrement();
-		System.out.println(roomLastId);
-		Room room = new Room(roomLastId, title, limit, owner.getId());
-		roomList.add(room);
+		RoomStaticList.getroomList().add(room);
 		if(roomController.requestByCreateRoom(room)) {
+			RoomStaticList.reloadRoomList();
 			response.sendRedirect("index.jsp");			
 		} else {
 			response.sendRedirect("500.jsp");

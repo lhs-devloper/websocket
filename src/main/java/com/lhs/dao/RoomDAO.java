@@ -36,7 +36,8 @@ public class RoomDAO implements UpdateDAO<Room>, SelectDAO<Room> {
 						rs.getInt("id"), 
 						rs.getString("title"),
 						rs.getInt("entry_limit"),
-						rs.getInt("owner")
+						rs.getInt("owner"),
+						rs.getString("password")
 				);
 			}
 		} catch (SQLException e) {
@@ -48,7 +49,7 @@ public class RoomDAO implements UpdateDAO<Room>, SelectDAO<Room> {
 				pstmt.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				return null;
 			}
 		}
 		
@@ -56,7 +57,7 @@ public class RoomDAO implements UpdateDAO<Room>, SelectDAO<Room> {
 	}
 	
 	public int selectLastId() {
-		int autoIncrement = 0;
+		int autoIncrement = 1;
 		String findSQL = "SELECT MAX(id)+1 as id FROM room";
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -66,6 +67,7 @@ public class RoomDAO implements UpdateDAO<Room>, SelectDAO<Room> {
 			while(rs.next()){
 				autoIncrement = rs.getInt("id");
 			}
+			System.out.println(autoIncrement);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -98,7 +100,8 @@ public class RoomDAO implements UpdateDAO<Room>, SelectDAO<Room> {
 						rs.getInt("id"), 
 						rs.getString("title"),
 						rs.getInt("entry_limit"),
-						rs.getInt("owner")
+						rs.getInt("owner"),
+						rs.getString("password")
 				);
 				roomList.add(room);
 			}
@@ -121,24 +124,49 @@ public class RoomDAO implements UpdateDAO<Room>, SelectDAO<Room> {
 	@Override
 	public int insert(Room room) {
 		int resultCount = 0;
+		String insertSQL = null;
 		PreparedStatement pstmt = null;
-		String insertSQL = "insert into Room(title, entry_limit, owner)"
-				+ "values(?, ?, ?)";
-		try {
-			pstmt = conn.prepareStatement(insertSQL);
-			pstmt.setString(1, room.getTitle());
-			pstmt.setInt(2, room.getEntryLimit());
-			pstmt.setInt(3, room.getOwnerId());
-			resultCount = pstmt.executeUpdate();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+		System.out.println(room.getPassword());
+		if(room.getPassword() == null) {
+			insertSQL = "insert into Room(title, entry_limit, owner)"
+					+ "values(?, ?, ?)";
 			try {
-				pstmt.close();
-			} catch (SQLException e) {
+				pstmt = conn.prepareStatement(insertSQL);
+				pstmt.setString(1, room.getTitle());
+				pstmt.setInt(2, room.getEntryLimit());
+				pstmt.setInt(3, room.getOwnerId());
+				resultCount = pstmt.executeUpdate();
+			}catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				try {
+					pstmt.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		} else {
+			insertSQL = "insert into Room(title, entry_limit, owner, password)"
+					+ "values(?, ?, ?, ?)";
+			try {
+				pstmt = conn.prepareStatement(insertSQL);
+				pstmt.setString(1, room.getTitle());
+				pstmt.setInt(2, room.getEntryLimit());
+				pstmt.setInt(3, room.getOwnerId());
+				pstmt.setString(4, room.getPassword());
+				resultCount = pstmt.executeUpdate();
+			}catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				try {
+					pstmt.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		return resultCount;

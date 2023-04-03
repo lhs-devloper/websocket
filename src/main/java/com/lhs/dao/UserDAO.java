@@ -18,7 +18,38 @@ public class UserDAO implements UpdateDAO<User>, SelectDAO<User> {
 		this.conn = DBHelper.getInstance().getConnection();
 	}
 
-	
+	public User selectGetId(String nickName) {
+		User user = null;
+		String findSQL = "select * from User where nickname=? " ;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = conn.prepareStatement(findSQL);
+			pstmt.setString(1, nickName);
+			rs = pstmt.executeQuery();
+			while(rs.next()) {
+				user = new User.UserBuilder()
+						.setId(rs.getInt("id"))
+						.setNickname(rs.getString("nickname"))
+						.setPassword(rs.getString("password"))
+						.setUserId(rs.getString("user_id"))
+						.build();
+				break;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pstmt.close();
+			} catch (SQLException e) {
+				return null;
+			}	
+		}
+		
+		return user;
+	}
 	@Override
 	public User select(String id) {
 		User user = null;
