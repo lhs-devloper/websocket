@@ -7,47 +7,8 @@
 <head>
 <title>Web Socket Example</title>
 <%@ include file="./setting.jsp" %>
+<link rel="stylesheet" href="./css/chat.css">
 </head>
-<style>
-.chat{
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	height: 90vh;
-}
-form{
-	margin-top: 5vh;
-	height: 10vh
-}
-.btn-group{
-	position: absolute;
-	left: 0;
-}
-fieldset{
-	background: #E6E6E6;
-	width: 50vw;
-	height: 80vh;
-	overflow-y:scroll;
-}
-fieldset::-webkit-scrollbar {
-  display: none;
-}
-#chat-list {
-    padding: 5px;
-}
-.other{
-	text-align:right;
-}
-.system{
-	text-align:center;
-	color: red;
-}
-.dm{
-	text-align:right;
-	color: #642EFE; 
-}
-</style>
 <body>
 <% 
 	String id = request.getParameter("id");
@@ -71,6 +32,7 @@ fieldset::-webkit-scrollbar {
   <div class="dropdown-menu">
     <p>귓속말 옵션 설정</p>
     <p>[닉네임]작성 후 보내기</p>
+    <p>예시) [xxx] 님 안녕하세요</p>
   </div>
   </div>
   

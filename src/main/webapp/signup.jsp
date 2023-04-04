@@ -6,25 +6,7 @@
 <meta charset="UTF-8">
 <title>Insert title here</title>
 <%@ include file="./setting.jsp" %>
-<style>
-	.form{
-		display: flex;
-		height: 90vh;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-	}
-	form{
-		width: 40%;
-	}
-	button{
-		float: right;
-	}
-	label{
-		font-family: 'Noto Sans KR', sans-serif;
-		font-weight: bold;
-	}
-</style>
+<link rel="stylesheet" href="./css/form.css">
 </head>
 <body>
 <% if(request.getAttribute("error") != null){ %>

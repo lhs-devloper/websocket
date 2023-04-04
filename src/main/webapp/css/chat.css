@@ -1,0 +1,39 @@
+@charset "UTF-8";
+.chat{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 90vh;
+}
+form{
+	margin-top: 5vh;
+	height: 10vh
+}
+.btn-group{
+	position: absolute;
+	left: 0;
+}
+fieldset{
+	background: #E6E6E6;
+	width: 50vw;
+	height: 80vh;
+	overflow-y:scroll;
+}
+fieldset::-webkit-scrollbar {
+  display: none;
+}
+#chat-list {
+    padding: 5px;
+}
+.other{
+	text-align:right;
+}
+.system{
+	text-align:center;
+	color: red;
+}
+.dm{
+	text-align:right;
+	color: #642EFE; 
+}

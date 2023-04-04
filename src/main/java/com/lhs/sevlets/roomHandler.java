@@ -18,9 +18,6 @@ import com.lhs.controller.RoomController;
 import com.lhs.dto.Room;
 import com.lhs.dto.User;
 
-/**
- * Servlet implementation class roomHandler
- */
 @WebServlet("/room")
 public class roomHandler extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -31,35 +28,29 @@ public class roomHandler extends HttpServlet {
     	roomController = new RoomController();
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		BroadSocket.BroadReload();
 		PrintWriter out = response.getWriter();
-//		request.setCharacterEncoding("UTF-8");
-//		response.setContentType("text/html;charset=UTF-8");
-		
+		// 한글 오류로 인해 dispatcher deprecated
+		// request.setCharacterEncoding("UTF-8");
+		// response.setContentType("text/html;charset=UTF-8");
 		if(request.getSession().getAttribute("user") == null){
 			response.sendRedirect("login");
 		}
 		String id = request.getParameter("id");
-//		int parseId = Integer.parseInt(id);
-//		if(parseId <= 30) {
-//			out.print("<script>alert('입장인원 제한 초과'); location.href='"+"roomCreate.jsp"+"';</script>");
-//		}
 		System.out.println(roomController.requestBySearchRoom(Integer.valueOf(id)));
 		if(roomController.requestBySearchRoom(Integer.valueOf(id))) {
 			int index = Integer.valueOf(request.getParameter("index"));
 			HashMap<Integer, Room> roomUsers = BroadSocket.getData();
 			if(roomUsers != null) {
-				System.out.println(id);
 				Room roomInfo = roomUsers.get(Integer.valueOf(id));
-				System.out.println(RoomStaticList.getroomList());
-				System.out.println("나를 제외한 현재 인원:" +RoomStaticList.getroomList().get(index).getUserList().size());
-				System.out.println("방 제한:" +RoomStaticList.getroomList().get(index).getEntryLimit());
-				System.out.println("방 개수: "+RoomStaticList.getroomList().size());
+				/* log
+					System.out.println(id);
+					System.out.println(RoomStaticList.getroomList());
+					System.out.println("나를 제외한 현재 인원:" +RoomStaticList.getroomList().get(index).getUserList().size());
+					System.out.println("방 제한:" +RoomStaticList.getroomList().get(index).getEntryLimit());
+					System.out.println("방 개수: "+RoomStaticList.getroomList().size());
+				*/
 				int now = RoomStaticList.getroomList().get(index).getUserList().size();
 				int limit = RoomStaticList.getroomList().get(index).getEntryLimit();
 				if(limit <= now) {
@@ -77,18 +68,15 @@ public class roomHandler extends HttpServlet {
 				
 				response.sendRedirect("room.jsp?id="+id);
 			}
-//			RequestDispatcher dispather = request.getRequestDispatcher("/room.jsp");
-			
-//			dispather.forward(request, response);
+
+			// RequestDispatcher dispather = request.getRequestDispatcher("/room.jsp");
+			// dispather.forward(request, response);
 		} else {
 			response.sendRedirect("index.jsp");
 		}
 		
 	}
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		request.setCharacterEncoding("UTF-8");
 		int limit = Integer.valueOf(request.getParameter("limit"));
@@ -98,8 +86,11 @@ public class roomHandler extends HttpServlet {
 		Room room = null;
 		String title = request.getParameter("title");
 		User owner = (User)request.getSession().getAttribute("user");
-		System.out.println("owner: " + owner.getId());
-		System.out.println("Nickname: " +owner.getNickname());
+		/*
+			Login Check User
+			System.out.println("owner: " + owner.getId());
+			System.out.println("Nickname: " +owner.getNickname());
+		*/
 		String check = request.getParameter("check");
 		if(check != null) {			
 			String pw = request.getParameter("pw");

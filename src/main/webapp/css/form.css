@@ -1,0 +1,26 @@
+@charset "UTF-8";
+.form{
+	display: flex;
+	height: 90vh;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+form{
+	width: 40%;
+}
+button{
+	float: right;
+}
+label{
+	font-family: 'Noto Sans KR', sans-serif;
+	font-weight: bold;
+}
+.link{
+	height: 5vh;
+	display: flex;
+	align-items: center;
+}
+input{
+	text-align: center;
+}

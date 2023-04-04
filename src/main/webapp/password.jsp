@@ -22,7 +22,8 @@
 			%>
 			location.href = "room.jsp?id="+<%=id%>;
 		}else{
-			
+			alert("비밀번호 오류");
+			location.href= "index.jsp";
 		}
 	</script>
 	

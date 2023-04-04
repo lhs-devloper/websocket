@@ -55,26 +55,24 @@ public class BroadSocket {
 		// usernicname & websocket mapping;
 		User user = (User)session.getAttribute("user");
 		nicknameMap.put(user.getNickname(),userSession);
-		// sessionUsers.add(userSession);
 	}
 
 	// browser에서 웹 소켓을 통해 메시지가 오면 호출되는 함수
 	@OnMessage
 	public void handleMessage(String message, Session userSession) throws IOException {
-//		RoomStaticList.reloadRoomList();
-	/*
-		if(roomUsers.get(1) == null) {
-			Room room = new Room(1, "test", 10);
-			roomUsers.put(1, room);
-		}
-	*/
-		// =====================================================
+
+		/*
+			테스트 코드
+			if(roomUsers.get(1) == null) {
+				Room room = new Room(1, "test", 10);
+				roomUsers.put(1, room);
+			}
+			String serverMessage = "지금 서버작업 중이라 메시지 전달 기능 X ";
+			userSession.getBasicRemote().sendText(serverMessage);
+		 */
+		
 		parseProtocol(message, userSession);
 		
-	/*
-		String serverMessage = "지금 서버작업 중이라 메시지 전달 기능 X ";
-		userSession.getBasicRemote().sendText(serverMessage);
-	*/
 	}
 
 	// 운영자 client가 유저에게 메시지를 보내는 함수
