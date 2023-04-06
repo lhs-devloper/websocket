@@ -26,6 +26,7 @@ public class ChatDAO implements UpdateDAO<Chat>{
 			pstmt.setInt(1, chat.getRoom());
 			pstmt.setInt(2, chat.getUser().getId());
 			pstmt.setString(3, chat.getContent());
+			System.out.println(pstmt);
 			resultCount = pstmt.executeUpdate();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

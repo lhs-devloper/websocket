@@ -18,7 +18,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.lhs.controller.ChatController;
-import com.lhs.dao.RoomDAO;
 import com.lhs.dao.UserDAO;
 import com.lhs.dto.Chat;
 import com.lhs.dto.Room;
@@ -77,10 +76,9 @@ public class BroadSocket {
 
 	// 운영자 client가 유저에게 메시지를 보내는 함수
 	public static void sendMessage(String message) {
-
 	}
 	// JSON 처리
-	public void parseProtocol(String message, Session userSession) throws IOException{
+	public void parseProtocol(String message, Session userSession){
 		try {			
 			JSONParser parser = new JSONParser();
 			Object JsonMessage = parser.parse(message);
@@ -90,7 +88,6 @@ public class BroadSocket {
 			if("enter".equals(order)) {
 				HttpSession session = sessionMap.get(userSession);
 				ArrayList<Session> userList = roomUsers.get(roomId).getUserList();
-				System.out.println("현재 방:" + userList);
 				int limit = roomUsers.get(roomId).getEntryLimit();
 				int nowRoomUserCount = userList.size();
 				JSONObject newJson = new JSONObject();
@@ -106,13 +103,11 @@ public class BroadSocket {
 //						userList.get(i).getBasicRemote().sendText(((User)session.getAttribute("user")).getNickname()+ "님 께서 입장하십니다");
 						userList.get(i).getBasicRemote().sendText(msg);
 					}
-					System.out.println(roomUsers.get(roomId).getUserList());					
 				} else {
 					userSession.getBasicRemote().sendText("인원 입장X");
 				}
 			}
 			if("message".equals(order)) {
-				
 				String content = String.valueOf(json.get("content"));
 				ArrayList<Session> roomUserList = roomUsers.get(roomId).getUserList();
 				HttpSession session = sessionMap.get(userSession);
@@ -129,13 +124,10 @@ public class BroadSocket {
 					
 					if("target".equals(target)) {
 						String targetUser = String.valueOf(json.get("targetUser"));
-						System.out.println(targetUser);
 						if(!targetUser.equals("")) {
 							newJson.put("data", content);
 							User user = userDAO.selectGetId(targetUser);
 							Session targetSession = nicknameMap.get(user.getNickname());
-							System.out.println(userSession);
-							System.out.println(targetSession);
 							newJson.put("dm", "dm");
 							boolean isTrue = true;
 							for(int i = 0; i < nowUserCount; i++) {
@@ -156,13 +148,26 @@ public class BroadSocket {
 						// roomUserList.get(0).getBasicRemote().sendText(msg);
 					}else {
 						newJson.put("data", content);
-						String msg = newJson.toJSONString();
-						for(int i = 0; i < nowUserCount; i++) {
-							if( roomUserList.get(i) == userSession ) {
-								continue;
+						String file = String.valueOf(json.get("file"));
+						if("file".equals(file)) {
+							newJson.put("file", "file");
+							String msg = newJson.toJSONString();
+							for(int i = 0; i < nowUserCount; i++) {
+								if( roomUserList.get(i) == userSession ) {
+									continue;
+								}
+								roomUserList.get(i).getBasicRemote().sendText(msg);
 							}
-							roomUserList.get(i).getBasicRemote().sendText(msg);
+						}else {
+							String msg = newJson.toJSONString();
+							for(int i = 0; i < nowUserCount; i++) {
+								if( roomUserList.get(i) == userSession ) {
+									continue;
+								}
+								roomUserList.get(i).getBasicRemote().sendText(msg);
+							}
 						}
+						
 					}
 				}
 				
@@ -183,6 +188,8 @@ public class BroadSocket {
 //				roomUsers.put(roomId, room);
 //			}
 		} catch (ParseException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

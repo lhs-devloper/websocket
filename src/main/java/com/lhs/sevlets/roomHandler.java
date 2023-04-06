@@ -38,7 +38,6 @@ public class roomHandler extends HttpServlet {
 			response.sendRedirect("login");
 		}
 		String id = request.getParameter("id");
-		System.out.println(roomController.requestBySearchRoom(Integer.valueOf(id)));
 		if(roomController.requestBySearchRoom(Integer.valueOf(id))) {
 			int index = Integer.valueOf(request.getParameter("index"));
 			HashMap<Integer, Room> roomUsers = BroadSocket.getData();
@@ -54,7 +53,6 @@ public class roomHandler extends HttpServlet {
 				int now = RoomStaticList.getroomList().get(index).getUserList().size();
 				int limit = RoomStaticList.getroomList().get(index).getEntryLimit();
 				if(limit <= now) {
-					System.out.println("??");
 					out.print("<script>alert('입장인원 제한 초과'); location.href='"+"index.jsp"+"';</script>");
 				}
 				

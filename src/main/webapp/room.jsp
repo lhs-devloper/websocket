@@ -50,6 +50,10 @@
     <!-- 서버로 메시지를 전송하는 버튼 -->
     <input onclick="sendMessage()" value="Send" type="button" class="btn btn-success">
   </form>
+  <form>
+  	<input id="fileMessage" type="file" accept="image/*">
+    <input onclick="sendFile()" value="Send" type="button" class="btn btn-success">
+  </form>
   </div>
   <br />
   
@@ -60,7 +64,8 @@
     const webSocket = new WebSocket("ws://192.168.0.128:8080/chat/broadsocket");
     // 콘솔 텍스트 영역
     let messageTextArea = document.getElementById("messageTextArea");
-    let chatfiled = document.querySelector('#chat-filedset')
+    let chatfiled = document.querySelector('#chat-filedset');
+    let fileInput = document.getElementById("fileMessage");
     // 접속이 완료되면
     webSocket.onopen = function(message) {
       // 콘솔에 메시지를 남긴다.
@@ -90,27 +95,39 @@
     		div.classList.add('system');
     		const chat = document.createElement('div');
             div.textContent = parsemessage.data;
-            div.appendChild(chat);
             document.querySelector('#chat-list').appendChild(div);
             chatfiled.scrollTop = chatfiled.scrollHeight;
     	} else if(parsemessage.dm){
-    		div.classList.add('dm');
-	        const chat = document.createElement('div');
-	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
-	        div.appendChild(chat);
-	        document.querySelector('#chat-list').appendChild(div);
-	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    		if(parsemessage.file){
+    			div.classList.add('dm');
+    	        const chat = document.createElement('img');
+    	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
+    	        document.querySelector('#chat-list').appendChild(div);
+    	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    		}else{
+    			div.classList.add('dm');
+    	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
+    	        document.querySelector('#chat-list').appendChild(div);
+    	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    		}
     	}else{		
-	        div.classList.add('other');
-	        const chat = document.createElement('div');
-	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
-	        div.appendChild(chat);
-	        document.querySelector('#chat-list').appendChild(div);
-	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    		if(parsemessage.file!=null){
+    			div.classList.add('other');
+    	        const chat = document.createElement('img');
+    	        const br = document.createElement("br");
+    	        div.textContent = "(" + parsemessage.user +")";
+    	        chat.src = parsemessage.data;
+    	        div.appendChild(br);
+    	        div.appendChild(chat);
+    	        document.querySelector('#chat-list').appendChild(div);
+    	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    		}else{
+    			div.classList.add('other');
+    	        div.textContent = "(" + parsemessage.user +")" + "=> " + parsemessage.data;
+    	        document.querySelector('#chat-list').appendChild(div);
+    	        chatfiled.scrollTop = chatfiled.scrollHeight;
+    		}
     	}
-        
-    	
-    	
     	/*
     	if(parsemessage.dm){
     		messageTextArea.value += "test";
@@ -119,6 +136,8 @@
     	// messageTextArea.value += "(" + parsemessage.user +")" + " => " + parsemessage.data + "\n";
     	// messageTextArea.scrollTop = messageTextArea.scrollHeight;
     };
+    
+    
     // 서버로 메시지를 발송하는 함수
     // Send 버튼을 누르거나 텍스트 박스에서 엔터를 치면 실행
     function sendMessage() {
@@ -138,9 +157,7 @@
 	  }
       const div = document.createElement('div');
       div.classList.add('mine');
-      const chat = document.createElement('div');
       div.textContent = "(me) => " + message.value + "\n";
-      div.appendChild(chat);
       document.querySelector('#chat-list').appendChild(div);
 
       // 소켓으로 보낸다.
@@ -149,7 +166,8 @@
     		  "order": "message",
     		  "content": message.value,
     		  "target": msgOption.value,
-    		  "targetUser": targetUser
+    		  "targetUser": targetUser,
+    		  "file": "text"
       }
       console.log(messageJson);
       webSocket.send(JSON.stringify(messageJson));
@@ -158,6 +176,66 @@
       // message.value = "";
       // messageTextArea.scrollTop = messageTextArea.scrollHeight;
       chatfiled.scrollTop = chatfiled.scrollHeight;
+    }
+    fileInput.addEventListener("change", ()=>{
+    	let file = fileInput.files[0];
+    	if(file.size > 1024 * 10){
+    		alert("10MB이상 파일 크기는 올릴 수 없습니다")
+    		fileInput.value = ""
+    	}
+    })
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);  // 인코딩
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function sendFile(){
+    	if(fileInput.value == ""){
+			return;
+		}
+
+    	let msgOption = document.getElementById("msgOpt");
+    	let targetUser = 'all';
+        // 콘솔에 메세지를 남긴다.
+	  	if(msgOption.value === "target"){
+	  		let target1 = message.value.indexOf('[');
+	  		let target2 = message.value.indexOf(']');
+	  		if(target1 != undefined && target2 != undefined){		  
+	  			targetUser = message.value.substr(target1+1, target2-1);
+	  			message.value = message.value.substring(target2+1);
+	  		}
+	  	}
+    	const img = document.createElement("img");
+    	
+        let file = fileInput.files[0];
+        
+        let imgSrc = await getBase64(file);
+		
+        let messageJson = {
+        	  "roomId": <%=roomId%>,
+      		  "order": "message",
+      		  "content": imgSrc,
+      		  "target": msgOption.value,
+      		  "targetUser": targetUser,
+      		  "file": "file"
+        }
+        fileInput.value = null;
+        const div = document.createElement('div');
+        const chat = document.createElement('img');
+        const br = document.createElement("br");
+        div.classList.add('mine');
+        div.textContent = "(me)";
+        chat.src = imgSrc;
+        div.appendChild(br);
+        div.appendChild(chat);
+        document.querySelector('#chat-list').appendChild(div);
+        chatfiled.scrollTop = chatfiled.scrollHeight;	
+	    webSocket.send(JSON.stringify(messageJson));
     }
     // 텍스트 박스에서 엔터를 누르면
     function enter() {

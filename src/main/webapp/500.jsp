@@ -5,8 +5,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="./css/error.css">
 </head>
 <body>
-	<h1>500</h1>
+<div class="error">
+	<h1>500 Server Error</h1>
+	<p>제작자는 더 이상 일 안 해요!</p>
+</div>
 </body>
 </html>

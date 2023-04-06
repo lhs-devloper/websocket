@@ -9,7 +9,6 @@ import javax.websocket.server.ServerEndpointConfig.Configurator;
 
 public class WebSocketConfigurator extends Configurator{
 	
-	
 	@Override
 	public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response) {
     	HttpSession session = (HttpSession) request.getHttpSession();
@@ -18,4 +17,5 @@ public class WebSocketConfigurator extends Configurator{
     	config.getUserProperties().put(ServletContext.class.getName(), ctx);    		
 
     }
+	
 }

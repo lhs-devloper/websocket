@@ -5,8 +5,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+<link rel="stylesheet" href="./css/error.css">
 </head>
 <body>
-	<h1>400</h1>
+<div class="error">
+	<h1>404 URL Error</h1>
+	<p>없는 페이지입니다~~~~~~~~~</p>
+</div>
 </body>
 </html>

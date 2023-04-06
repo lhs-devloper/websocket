@@ -37,10 +37,8 @@ public class deleteHandler extends HttpServlet {
 		HttpSession session = request.getSession();
 		User user = (User)session.getAttribute("user");
 		if("room".equals(target)) {
-			System.out.println(RoomStaticList.getroomList().size());
 			String id = request.getParameter("id");
 			int index = Integer.valueOf(request.getParameter("index"));
-			System.out.println(index);
 			if(roomController.requestByDeleteRoom(user.getId(), Integer.valueOf(id))) {
 				RoomStaticList.getroomList().remove(index);
 				response.sendRedirect("index.jsp");				
